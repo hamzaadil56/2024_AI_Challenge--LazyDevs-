@@ -6,7 +6,7 @@ Hamza
 Ashhar
 
 Tech Stack:
-wHISPER Open AI model
+Whisper Open AI model
 GPT 4 Turbo (Function Calling)
 Fast API
 Streamlit
