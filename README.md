@@ -11,3 +11,6 @@ GPT 4 Turbo (Function Calling)
 Fast API
 Streamlit
 Hugging Face (Text to speech)
+
+
+poetry run uvicorn voicedover.main:app --reload

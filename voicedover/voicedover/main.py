@@ -34,3 +34,18 @@ def transcribe_audio(audio_file_path):
         transcription = client.audio.transcriptions.create("whisper-1", audio_file)
     return transcription['text']
 
+# Example usage: 
+# python main.py
+# following function will take in input from the user and send it to openAi client. The response will then be displayed.
+@app.get("/chat")
+def chat():
+    user_input = input("Enter your message: ")
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_input}
+        ]
+    )
+    print(response.choices[0].message.content)
+    return response.choices[0].message.content
