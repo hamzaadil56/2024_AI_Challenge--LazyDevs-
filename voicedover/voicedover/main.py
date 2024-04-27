@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(
     api_key=OPENAI_API_KEY
@@ -12,7 +12,7 @@ client = OpenAI(
 
 app = FastAPI()
 
-audio_file_path='./EarningsCall.wav'
+audio_file_path = './EarningsCall.wav'
 
 
 @app.get("/{prompt}")
@@ -31,12 +31,16 @@ def get_response(prompt):
 @app.get("/audio")
 def transcribe_audio(audio_file_path):
     with open(audio_file_path, 'rb') as audio_file:
-        transcription = client.audio.transcriptions.create("whisper-1", audio_file)
+        transcription = client.audio.transcriptions.create(
+            "whisper-1", audio_file)
+    print(transcription)
     return transcription['text']
 
-# Example usage: 
+# Example usage:
 # python main.py
 # following function will take in input from the user and send it to openAi client. The response will then be displayed.
+
+
 @app.get("/chat")
 def chat():
     user_input = input("Enter your message: ")
