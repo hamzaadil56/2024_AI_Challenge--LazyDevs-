@@ -13,20 +13,7 @@ client = OpenAI(
 
 app = FastAPI()
 
-assistant = client.beta.assistants.create(
-    name="API Caller",
-    instructions="You are responsible for handling apis for a particular website which will be given by the user. User will give instructions to do particular tasks like 'Add To Cart' 'Tell me the items present in the inventory' 'How many categories are there' ",
-    model="gpt-3.5-turbo-0125",
-)
-
-thread = client.beta.threads.create()
-
-message = client.beta.threads.messages.create(
-    thread_id=thread.id,
-    role="user",
-    content="I want to order this item of bag!"
-)
-
+openai_assistant = OpenAIAssistant(client=client)
 
 audio_file_path = './EarningsCall.wav'
 
