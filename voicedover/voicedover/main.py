@@ -5,7 +5,6 @@ import os
 
 load_dotenv()
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
-print(OPENAI_API_KEY)
 
 client = OpenAI(
     api_key=OPENAI_API_KEY
@@ -13,8 +12,9 @@ client = OpenAI(
 
 app = FastAPI()
 
+audio_file_path='./EarningsCall.wav'
 
-#the following api will take some text and return the response. It will call openai by passing the api key defined above.
+
 @app.get("/{prompt}")
 def get_response(prompt):
     completion = client.chat.completions.create(
@@ -26,4 +26,11 @@ def get_response(prompt):
     )
 
     return completion.choices[0].message
+
+
+@app.get("/audio")
+def transcribe_audio(audio_file_path):
+    with open(audio_file_path, 'rb') as audio_file:
+        transcription = client.audio.transcriptions.create("whisper-1", audio_file)
+    return transcription['text']
 
