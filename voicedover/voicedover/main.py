@@ -3,7 +3,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 from pydantic import BaseModel
-
+import requests
+from requests.models import Response
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -21,7 +22,7 @@ json_schema = {
     },
     "servers": [
         {
-            "url": "link yo yout website goes here"
+            "url": "https://todo-fastapi-beta.vercel.app"
         }
     ],
     "paths": {
@@ -254,7 +255,6 @@ json_schema = {
     }
 }
 
-
 tools = [
     {
         "type": "function",
@@ -310,4 +310,12 @@ def get_response(prompt: Prompt):
         tools=tools,
     )
 
-    return completion.choices[0].message
+    return completion
+
+# I want to make function that takes url and method as the parameters and returns the completion.
+
+
+@app.get("/api-details")
+def get_api_details(url: str, method: str):
+    response = requests.request(method, url)
+    return response
