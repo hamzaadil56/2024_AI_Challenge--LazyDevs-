@@ -7,6 +7,7 @@ import requests
 from requests.models import Response
 import json
 from openai.types.chat.chat_completion import ChatCompletion
+from testingTTS import textToSpeech
 
 # Set up Streamlit layout
 st.title("Audio Recorder")
@@ -77,12 +78,15 @@ if st.button("Record"):
                     response = requests.get(
                         f"{function_args.get('url')}")
                     st.write(response.text)
+                    textToSpeech(response.text)
                 elif (function_args.get("method") == "post"):
                     response = requests.post(
                         f"{function_args.get('url')}", json=function_args.get("body"))
                     st.write(response.text)
+                    textToSpeech(response.text)
                 else:
                     st.write("Invalid method")
+                    textToSpeech(response.text)
                 # response = requests.get(f"http://127.0.0.1:8000/api-details?url={function_args.get("url")}&method={function_args.get("method")}"
                 #                         )
 
