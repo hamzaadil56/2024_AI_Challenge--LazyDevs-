@@ -78,17 +78,20 @@ if st.button("Record"):
                     response = requests.get(
                         f"{function_args.get('url')}")
                     st.write(response.text)
-                    textToSpeech(response.text)
+                    outputAudio = textToSpeech(response.text)
+                    st.audio(outputAudio)
                 elif (function_args.get("method") == "post"):
                     response = requests.post(
                         f"{function_args.get('url')}", json=function_args.get("body"))
                     st.write(response.text)
-                    textToSpeech(response.text)
+                    outputAudio = textToSpeech(response.text)
+                    st.audio(outputAudio)
                 else:
                     st.write("Invalid method")
-                    textToSpeech(response.text)
-                # response = requests.get(f"http://127.0.0.1:8000/api-details?url={function_args.get("url")}&method={function_args.get("method")}"
-                #                         )
+                    outputAudio = textToSpeech(response.text)
+                    st.audio(outputAudio)
+                response = requests.get(f"http://127.0.0.1:8000/api-details?url={function_args.get("url")}&method={function_args.get("method")}"
+                                        )
 
 
 # Display folder path where the audio will be saved
