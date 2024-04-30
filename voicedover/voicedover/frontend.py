@@ -55,7 +55,7 @@ if st.button("Record"):
 
         if response.text:
 
-            post_data = {"prompt": "Bring me all the todos from my todo list."}
+            post_data = {"prompt": response.text}
 
             response = requests.post(
                 # Use the 'data' parameter to send the request body
@@ -90,8 +90,8 @@ if st.button("Record"):
                     st.write("Invalid method")
                     outputAudio = textToSpeech(response.text)
                     st.audio(outputAudio)
-                response = requests.get(f"http://127.0.0.1:8000/api-details?url={function_args.get("url")}&method={function_args.get("method")}"
-                                        )
+                # response = requests.get(f"http://127.0.0.1:8000/api-details?url={function_args.get("url")}&method={function_args.get("method")}"
+                #                         )
 
 
 # Display folder path where the audio will be saved
