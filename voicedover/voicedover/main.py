@@ -5,6 +5,7 @@ import os
 from pydantic import BaseModel
 import requests
 from requests.models import Response
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -273,6 +274,14 @@ tools = [
                         "enum": ["get", "post", "put", "delete"],
                         "description": "This is the method of the api like 'post' 'get' 'put' 'delete'.",
                     },
+                    "body":{
+                        "type":"object",
+                        "description":"This is the body (optional) of the api to be called."
+                    },
+                    "query":{
+                        "type":"object",
+                        "description":"This is the query (optional) of the api to be called."
+                    }
                 },
                 "required": ["url", "method"],
             },
@@ -283,8 +292,10 @@ tools = [
 messages = [
     {"role": "system",
      "content": f'''You are an API extracter which extracts API's from the given schema
-     {json_schema} according to the context that what user wanted to do. Like for example: User says "Add Breakfast in my todo list" or "I want todo homework" You need to understand the context of the user and then pull out the write api for that action from the given schema. If you are not sure then ask more details from the user!
-     You should not any link from yourself. It should be according to the schema. Ask more questions if you can't understand.
+     {json_schema} according to the context that what user wanted to do. Like for example: User says "Add Breakfast in my todo list" 
+     or "I want todo homework" You need to understand the context of the user and then pull out the write api for that action from 
+     the given schema. If you are not sure then ask more details from the user! You should not write any link from yourself. 
+     It should be according to the schema. Ask more questions if you can't understand.
      '''},
 ]
 
