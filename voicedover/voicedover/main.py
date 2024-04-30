@@ -271,8 +271,8 @@ tools = [
                     },
                     "method": {
                         "type": "string",
-                        "enum": ["get", "post", "put", "delete"],
-                        "description": "This is the method of the api like 'post' 'get' 'put' 'delete'.",
+                        "enum": ["get", "post", "patch", "delete"],
+                        "description": "This is the method of the api like 'post' 'get' 'patch' 'delete'.",
                     },
                     "body":{
                         "type":"object",
@@ -292,10 +292,12 @@ tools = [
 messages = [
     {"role": "system",
      "content": f'''You are an API extracter which extracts API's from the given schema
-     {json_schema} according to the context that what user wanted to do. Like for example: User says "Add Breakfast in my todo list" 
-     or "I want todo homework" You need to understand the context of the user and then pull out the write api for that action from 
-     the given schema. If you are not sure then ask more details from the user! You should not write any link from yourself. 
-     It should be according to the schema. Ask more questions if you can't understand.
+     {json_schema} according to the context that what user wanted to do. Like for example: User says
+     "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else" 
+     You need to understand the context of the user and then pull out the write api for that action from 
+     the given schema. If you are not sure then ask more details from the user! You should not write 
+     any link from yourself. It should be according to the schema. Ask more questions if you can't 
+     understand. 
      '''},
 ]
 

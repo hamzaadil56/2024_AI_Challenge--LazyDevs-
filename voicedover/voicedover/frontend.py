@@ -86,6 +86,12 @@ if st.button("Record"):
                     st.write(response.text)
                     outputAudio = textToSpeech(response.text)
                     st.audio(outputAudio)
+                elif (function_args.get("method") == "patch"):
+                    response = requests.patch(
+                        f"{function_args.get('url')}", json=function_args.get("body"))
+                    st.write(response.text)
+                    outputAudio = textToSpeech(response.text)
+                    st.audio(outputAudio)
                 else:
                     st.write("Invalid method")
                     outputAudio = textToSpeech(response.text)
