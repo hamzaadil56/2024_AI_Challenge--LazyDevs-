@@ -276,11 +276,11 @@ tools = [
                     },
                     "body":{
                         "type":"object",
-                        "description":"This is the body (optional) of the api to be called."
+                        "description":"This is the body of the api to be called."
                     },
                     "query":{
                         "type":"object",
-                        "description":"This is the query (optional) of the api to be called."
+                        "description":"This is the query of the api to be called."
                     }
                 },
                 "required": ["url", "method"],
