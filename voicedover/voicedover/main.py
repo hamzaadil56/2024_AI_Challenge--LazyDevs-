@@ -5,8 +5,7 @@ import os
 from pydantic import BaseModel
 import requests
 from requests.models import Response
-from openai_assistant import OpenAIAssistant
-
+from typing import List, Optional
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -15,7 +14,7 @@ client = OpenAI(
 )
 
 app = FastAPI()
-openai_assistant = OpenAIAssistant(client=client)
+
 json_schema = {
     "openapi": "3.1.0",
     "info": {
@@ -321,17 +320,42 @@ class Prompt(BaseModel):
 def get_response(prompt: Prompt):
     messages.append({"role": "user", "content": prompt.prompt})
     completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4-turbo",
         messages=messages,
         tools=tools,
     )
 
-    return completion
+    return {"completion": completion, "messages": messages}
 
 # I want to make function that takes url and method as the parameters and returns the completion.
 
 
-@app.get("/api-details")
-def get_api_details(url: str, method: str):
-    response = requests.request(method, url)
-    return response
+# @app.get("/api-details")
+# def get_api_details(url: str, method: str):
+#     response = requests.request(method, url)
+#     return response
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+
+class Messages(BaseModel):
+    messages: List[Message]
+
+
+class ResponseJSON(BaseModel):
+    response_json: str
+
+
+@app.post("/response-audio")
+def response_audio(audioResponse: ResponseJSON):
+    messages.append({"role": "user", "content": audioResponse.response_json})
+    messages.append({
+                    "role": "system", "content": "You are responsible to convert the incoming data to spoken language"})
+    completion = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=messages,
+
+    )
+    return completion
