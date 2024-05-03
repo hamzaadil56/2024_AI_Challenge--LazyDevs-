@@ -13,11 +13,14 @@ def textToSpeech(text:str='Please say something.'):
         # load xvector containing speaker's voice characteristics from a dataset
     embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation")
     speaker_embeddings = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0)
+    
+    # using the microsoft TTS, the below line(s) change the speaker of the model   
+     
 
     speech = model.generate_speech(inputs["input_ids"], speaker_embeddings, vocoder=vocoder)
 
-    sf.write("speech1.wav", speech.numpy(), samplerate=16000)
-    return 'speech1.wav'
+    sf.write("speech2.wav", speech.numpy(), samplerate=16000)
+    return 'speech2.wav'
   
   
 text = '''
