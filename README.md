@@ -76,7 +76,3 @@ Our testing focused on the core functionalities such as listing, adding, and upd
 
 For more information or if you encounter any issues, please open an issue in this repository.
 ```
-
-### Summary
-This README provides a comprehensive guide for setting up and running the VoicedOver application, along with a detailed description of the problem it solves, the solution, and the technologies used. The instructions are clear for both installation and operation, ensuring that anyone checking out the repository can get started with minimal hassle.
-
