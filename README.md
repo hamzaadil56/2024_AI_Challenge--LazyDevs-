@@ -1,5 +1,3 @@
-# 2024_AI_Challenge--LazyDevs-
-
 # VoicedOver
 
 ## 2024 AI Challenge – Lazy Devs
