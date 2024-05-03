@@ -29,15 +29,12 @@ Generative AI is pivotal in interpreting user intent from audio inputs, executin
 
 ### Technologies
 - Python 3.12
+- Poetry
 - FastAPI 0.110.2
 - OpenAI Whisper
 - OpenAI GPT-4 Turbo
 - OpenAI TTS-1
 - Streamlit
-
-### Prerequisits:
-- Poetry
-- 
 
 ## Installation and Running the Application
 
