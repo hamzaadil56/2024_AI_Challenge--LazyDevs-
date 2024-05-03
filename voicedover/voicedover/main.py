@@ -5,8 +5,42 @@ import os
 from pydantic import BaseModel
 import requests
 from requests.models import Response
-from openai_assistant import OpenAIAssistant
-import uvicorn  
+import uvicorn
+from typing_extensions import override
+from openai import AssistantEventHandler
+
+
+class EventHandler(AssistantEventHandler):
+    @override
+    def on_event(self, event):
+        # Retrieve events that are denoted with 'requires_action'
+        # since these will have our tool_calls
+        if event.event == 'thread.run.requires_action':
+            run_id = event.data.id  # Retrieve the run ID from the event data
+            self.handle_requires_action(event.data, run_id)
+
+    def handle_requires_action(self, data, run_id):
+        tool_outputs = []
+
+        for tool in data.required_action.submit_tool_outputs.tool_calls:
+            if tool.function.name == "get_api_details":
+                tool_outputs.append({"tool_call_id": tool.id, "output": "57"})
+
+        # Submit all tool_outputs at the same time
+        self.submit_tool_outputs(tool_outputs, run_id)
+
+    def submit_tool_outputs(self, tool_outputs, run_id):
+        # Use the submit_tool_outputs_stream helper
+        with client.beta.threads.runs.submit_tool_outputs_stream(
+            thread_id=self.current_run.thread_id,
+            run_id=self.current_run.id,
+            tool_outputs=tool_outputs,
+            event_handler=EventHandler(),
+        ) as stream:
+            for text in stream.text_deltas:
+                print(text, "stream", end="", flush=True)
+        print()
+
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -16,7 +50,7 @@ client = OpenAI(
 )
 
 app = FastAPI()
-openai_assistant = OpenAIAssistant(client=client)
+
 json_schema = {
     "openapi": "3.1.0",
     "info": {
@@ -258,38 +292,91 @@ json_schema = {
     }
 }
 
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_api_details",
-            "description": "This function gets all the details of an api such as route url, method of the api, query or path parameters, and also body for the post,put, and patch request. ",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "url": {
-                        "type": "string",
-                        "description": "This is the url of the api with the the endpoint as mentioned in the json schema.",
-                    },
-                    "method": {
-                        "type": "string",
-                        "enum": ["get", "post", "patch", "delete"],
-                        "description": "This is the method of the api like 'post' 'get' 'patch' 'delete'.",
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "If the value of key 'in' is equal to body, then it is exist. If not, then this is empty string."
-                    },
-                    "query": {
-                        "type": "string",
-                        "description": "If the value of key 'in' is equal to query, then it is exist. If not, then this is empty string."
+
+class OpenAIAssistant:
+    client = None
+    assistant = None
+    thread = None
+
+    def __init__(self, client):
+        self.client = client
+        self.assistant = client.beta.assistants.create(
+            name="API Caller",
+            instructions=f'''You are an API extracter which extracts API's from the given schema
+      {json_schema} according to the context that what user wanted to do. In this schema, there is list of paths and in each path there is a specific method of http such as "get","post","put","patch","delete". Each method has specific properties which contains a "parameter" object and which is a list of an object containing name of the parameter and also where to pass the parameter. The parameter can be passed to query, body, or in path.  Like for example: User says  dfd
+     "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else"
+    If the api path's parameter's 'in' value is 'query' then pass the value given by the user to query of the api. And of the api path's parameter's 'in' value is 'body', thenpass the value given by the user to the boddy of the api.
+    You need to understand the context of the user and then pull out the write api for that action from
+     the given schema. If you are not sure then ask more details from the user! You should not write
+      any link from yourself. It should be according to the schema. Ask more questions if you can't
+      understand.
+      ''',
+            model="gpt-4-turbo",
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "get_api_details",
+                        "description": "This function gets all the details of an api such as route url, method of the api, query or path parameters, and also body for the post,put, and patch request. ",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "type": "string",
+                                    "description": "This is the url of the api with the the endpoint as mentioned in the json schema.",
+                                },
+                                "method": {
+                                    "type": "string",
+                                    "enum": ["get", "post", "patch", "delete"],
+                                    "description": "This is the method of the api like 'post' 'get' 'patch' 'delete'.",
+                                },
+                                "body": {
+                                    "type": "string",
+                                    "description": "If the value of key 'in' is equal to body, then it is exist. If not, then this is empty string."
+                                },
+                                "query": {
+                                    "type": "string",
+                                    "description": "If the value of key 'in' is equal to query, then it is exist. If not, then this is empty string."
+                                }
+                            },
+                            "required": ["url", "method", "body", "query"],
+                        },
                     }
                 },
-                "required": ["url", "method", "body", "query"],
-            },
-        }
-    },
-]
+            ]
+
+        )
+        self.thread = client.beta.threads.create()
+
+    def add_message(self, role, content):
+        self.client.beta.threads.messages.create(
+            thread_id=self.thread.id, role=role, content=content
+        )
+
+    def create_run(self):
+        # run = self.client.beta.threads.runs.create_and_poll(
+        #     thread_id=self.thread.id, assistant_id=self.assistant.id
+        # )
+        with client.beta.threads.runs.stream(
+            thread_id=self.thread.id,
+            assistant_id=self.assistant.id,
+            event_handler=EventHandler()
+        ) as stream:
+            stream.until_done()
+            print(stream)
+            return stream
+        # if run.status == 'completed':
+        #     messages = self.client.beta.threads.messages.list(
+        #         thread_id=self.thread.id
+        #     )
+        #     print(messages)
+        #     return messages
+        # else:
+        #     return (run.status)
+        #     print(run.status)
+
+
+openai_assistant = OpenAIAssistant(client=client)
 
 
 # messages = [
@@ -335,4 +422,4 @@ def get_api_details(url: str, method: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, port=8000)
