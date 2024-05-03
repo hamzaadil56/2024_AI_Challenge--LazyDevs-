@@ -5,39 +5,8 @@ import os
 from pydantic import BaseModel
 import requests
 from requests.models import Response
-# from openai_assistant import OpenAIAssistant
-
-class OpenAIAssistant:
-    client = None
-    assistant = None
-    thread = None
-
-    def __init__(self, client):
-        self.client = client
-        self.assistant = client.beta.assistants.create(
-            name="API Caller",
-            instructions="You are responsible for handling apis for a particular website which will be given by the user. User will give instructions to do particular tasks like 'Add To Cart' 'Tell me the items present in the inventory' 'How many categories are there' ",
-            model="gpt-3.5-turbo-0125",
-        )
-        self.thread = client.beta.threads.create()
-
-    def add_message(self, role, content):
-        self.client.beta.threads.messages.create(
-            thread_id=self.thread.id, role=role, content=content
-        )
-
-    def create_run(self):
-        run = self.client.beta.threads.runs.create_and_poll(
-            thread_id=self.thread.id, assistant_id=self.assistant.id
-        )
-        if run.status == 'completed':
-            messages = self.client.beta.threads.messages.list(
-                thread_id=self.thread.id
-            )
-            print(messages)
-        else:
-            print(run.status)
-
+from openai_assistant import OpenAIAssistant
+import uvicorn  
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -323,18 +292,18 @@ tools = [
 ]
 
 
-messages = [
-    {"role": "system",
-     "content": f'''You are an API extracter which extracts API's from the given schema
-     {json_schema} according to the context that what user wanted to do. In this schema, there is list of paths and in each path there is a specific method of http such as "get","post","put","patch","delete". Each method has specific properties which contains a "parameter" object and which is a list of an object containing name of the parameter and also where to pass the parameter. The parameter can be passed to query, body, or in path.  Like for example: User says  dfd
-     "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else"
-     If the api path's parameter's 'in' value is 'query' then pass the value given by the user to query of the api. And of the api path's parameter's 'in' value is 'body', thenpass the value given by the user to the boddy of the api.
-     You need to understand the context of the user and then pull out the write api for that action from
-     the given schema. If you are not sure then ask more details from the user! You should not write
-     any link from yourself. It should be according to the schema. Ask more questions if you can't
-     understand.
-     '''},
-]
+# messages = [
+#     {"role": "system",
+#      "content": f'''You are an API extracter which extracts API's from the given schema
+#      {json_schema} according to the context that what user wanted to do. In this schema, there is list of paths and in each path there is a specific method of http such as "get","post","put","patch","delete". Each method has specific properties which contains a "parameter" object and which is a list of an object containing name of the parameter and also where to pass the parameter. The parameter can be passed to query, body, or in path.  Like for example: User says  dfd
+#      "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else"
+#      If the api path's parameter's 'in' value is 'query' then pass the value given by the user to query of the api. And of the api path's parameter's 'in' value is 'body', thenpass the value given by the user to the boddy of the api.
+#      You need to understand the context of the user and then pull out the write api for that action from
+#      the given schema. If you are not sure then ask more details from the user! You should not write
+#      any link from yourself. It should be according to the schema. Ask more questions if you can't
+#      understand.
+#      '''},
+# ]
 
 
 @app.get("/audio")
@@ -351,14 +320,10 @@ class Prompt(BaseModel):
 
 @app.post("/call-api")
 def get_response(prompt: Prompt):
-    messages.append({"role": "user", "content": prompt.prompt})
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        tools=tools,
-    )
-
-    return completion
+    # messages.append({"role": "user", "content": prompt.prompt})
+    openai_assistant.add_message(role="user", content=prompt.prompt)
+    content = openai_assistant.create_run()
+    return content
 
 # I want to make function that takes url and method as the parameters and returns the completion.
 
@@ -367,3 +332,7 @@ def get_response(prompt: Prompt):
 def get_api_details(url: str, method: str):
     response = requests.request(method, url)
     return response
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -26,5 +26,6 @@ class OpenAIAssistant:
                 thread_id=self.thread.id
             )
             print(messages)
+            return messages.data[0].content
         else:
             print(run.status)
