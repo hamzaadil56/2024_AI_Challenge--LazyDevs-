@@ -1,6 +1,3 @@
-
-
-
 class OpenAIAssistant:
     client = None
     assistant = None
@@ -14,3 +11,20 @@ class OpenAIAssistant:
             model="gpt-3.5-turbo-0125",
         )
         self.thread = client.beta.threads.create()
+
+    def add_message(self, role, content):
+        self.client.beta.threads.messages.create(
+            thread_id=self.thread.id, role=role, content=content
+        )
+
+    def create_run(self):
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.thread.id, assistant_id=self.assistant.id
+        )
+        if run.status == 'completed':
+            messages = self.client.beta.threads.messages.list(
+                thread_id=self.thread.id
+            )
+            print(messages)
+        else:
+            print(run.status)
