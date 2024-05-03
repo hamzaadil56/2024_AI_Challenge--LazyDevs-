@@ -44,22 +44,21 @@ def record_audio(filename, duration=10, sample_rate=44100):
 # Display user input for filename and duration
 default_filename = f"voicedover/speech{
     datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
-filename = st.text_input("Enter filename to save audio:", default_filename)
 duration = st.slider("Recording duration (seconds):", 1, 10, 5)
 
 # Display record button
 if st.button("Record"):
     # Check if filename is provided
-    if not filename:
+    if not default_filename:
         st.error("Please enter a filename.")
     else:
         # Record audio and save to file
-        record_audio(filename, duration)
-        st.success(f"Audio recorded and saved as '{filename}'.")
+        record_audio(default_filename, duration)
+        st.success(f"Audio recorded and saved as '{default_filename}'.")
 
         # # Make a GET request to a server
         response: Response = requests.get(
-            f"http://127.0.0.1:8000/audio?audio_file_path={filename}")
+            f"http://127.0.0.1:8000/audio?audio_file_path={default_filename}")
         st.write(response.text)
         if response.text:
 
