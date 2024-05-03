@@ -75,4 +75,3 @@ Our testing focused on the core functionalities such as listing, adding, and upd
 ---
 
 For more information or if you encounter any issues, please open an issue in this repository.
-```
