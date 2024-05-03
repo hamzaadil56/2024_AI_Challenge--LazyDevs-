@@ -5,6 +5,7 @@ import os
 from pydantic import BaseModel
 import requests
 from requests.models import Response
+from openai_assistant import OpenAIAssistant
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -14,7 +15,7 @@ client = OpenAI(
 )
 
 app = FastAPI()
-
+openai_assistant = OpenAIAssistant(client=client)
 json_schema = {
     "openapi": "3.1.0",
     "info": {
@@ -261,43 +262,45 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_api_details",
-            "description": "Get all the details of the api",
+            "description": "This function gets all the details of an api such as route url, method of the api, query or path parameters, and also body for the post,put, and patch request. ",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "url": {
                         "type": "string",
-                        "description": "This is the url of the api to be called",
+                        "description": "This is the url of the api with the the endpoint as mentioned in the json schema.",
                     },
                     "method": {
                         "type": "string",
                         "enum": ["get", "post", "patch", "delete"],
                         "description": "This is the method of the api like 'post' 'get' 'patch' 'delete'.",
                     },
-                    "body":{
-                        "type":"object",
-                        "description":"This is the body of the api to be called."
+                    "body": {
+                        "type": "string",
+                        "description": "If the value of key 'in' is equal to body, then it is exist. If not, then this is empty string."
                     },
-                    "query":{
-                        "type":"object",
-                        "description":"This is the query of the api to be called."
+                    "query": {
+                        "type": "string",
+                        "description": "If the value of key 'in' is equal to query, then it is exist. If not, then this is empty string."
                     }
                 },
-                "required": ["url", "method"],
+                "required": ["url", "method", "body", "query"],
             },
         }
     },
 ]
 
+
 messages = [
     {"role": "system",
      "content": f'''You are an API extracter which extracts API's from the given schema
-     {json_schema} according to the context that what user wanted to do. Like for example: User says
-     "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else" 
-     You need to understand the context of the user and then pull out the write api for that action from 
-     the given schema. If you are not sure then ask more details from the user! You should not write 
-     any link from yourself. It should be according to the schema. Ask more questions if you can't 
-     understand. 
+     {json_schema} according to the context that what user wanted to do. In this schema, there is list of paths and in each path there is a specific method of http such as "get","post","put","patch","delete". Each method has specific properties which contains a "parameter" object and which is a list of an object containing name of the parameter and also where to pass the parameter. The parameter can be passed to query, body, or in path.  Like for example: User says  dfd
+     "Add Breakfast in my todo list" or "I want todo homework" or "Change my todo to something else"
+     If the api path's parameter's 'in' value is 'query' then pass the value given by the user to query of the api. And of the api path's parameter's 'in' value is 'body', thenpass the value given by the user to the boddy of the api.
+     You need to understand the context of the user and then pull out the write api for that action from
+     the given schema. If you are not sure then ask more details from the user! You should not write
+     any link from yourself. It should be according to the schema. Ask more questions if you can't
+     understand.
      '''},
 ]
 
