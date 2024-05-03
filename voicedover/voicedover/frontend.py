@@ -10,7 +10,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from testingTTS2 import TTS
 
 # Set up Streamlit layout
-st.title("Audio Recorder")
+st.title("VoicedOver")
 
 # Define function to record audio
 
