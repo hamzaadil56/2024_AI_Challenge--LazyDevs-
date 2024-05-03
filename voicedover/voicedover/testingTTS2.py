@@ -21,4 +21,4 @@ def TTS(text:str = "Today is a wonderful day to build something people love!" ):
 
     return response.stream_to_file(speech_file_path)
 
-TTS("I have been the one who has been working really hard to get to you.")
+TTS("Just think about all the possibilities of this technology.")
