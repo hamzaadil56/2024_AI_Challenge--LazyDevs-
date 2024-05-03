@@ -29,15 +29,12 @@ Generative AI is pivotal in interpreting user intent from audio inputs, executin
 
 ### Technologies
 - Python 3.12
+- Poetry
 - FastAPI 0.110.2
 - OpenAI Whisper
 - OpenAI GPT-4 Turbo
 - OpenAI TTS-1
 - Streamlit
-
-### Prerequisits:
-- Poetry
-- 
 
 ## Installation and Running the Application
 
@@ -78,8 +75,3 @@ Our testing focused on the core functionalities such as listing, adding, and upd
 ---
 
 For more information or if you encounter any issues, please open an issue in this repository.
-```
-
-### Summary
-This README provides a comprehensive guide for setting up and running the VoicedOver application, along with a detailed description of the problem it solves, the solution, and the technologies used. The instructions are clear for both installation and operation, ensuring that anyone checking out the repository can get started with minimal hassle.
-
