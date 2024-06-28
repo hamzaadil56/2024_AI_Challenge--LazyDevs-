@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -6,6 +6,15 @@ from pydantic import BaseModel
 import requests
 from requests.models import Response
 from typing import List, Optional
+import shutil
+from typing import Annotated
+import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+import json
+from pathlib import Path
+from fastapi.responses import FileResponse
+
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -14,6 +23,19 @@ client = OpenAI(
 )
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000"
+
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 json_schema = {
     "openapi": "3.1.0",
@@ -348,6 +370,10 @@ class ResponseJSON(BaseModel):
     response_json: str
 
 
+class AudioFile(BaseModel):
+    audio_file: bytes
+
+
 @app.post("/response-audio")
 def response_audio(audioResponse: ResponseJSON):
     messages.append({"role": "user", "content": audioResponse.response_json})
@@ -359,3 +385,118 @@ def response_audio(audioResponse: ResponseJSON):
 
     )
     return completion
+
+
+# def process_audio(audio):
+#     # Send audio to OpenAI Whisper
+#     whisper_response = OpenAI.Audio.transcribe("whisper-1", audio)
+#     text = whisper_response['text']
+#     # Convert text to speech with OpenAI TTS
+#     tts_response = openai.TTS.create(text)
+#     return {"transcription": text, "audio": tts_response['audio']}
+class BusinessDetail(BaseModel):
+    idea: str
+    location: str
+    budget: Optional[float]
+
+
+class GeneratedBusinessIdea(BaseModel):
+    message: str
+    business_name: str
+    business_location: str
+    business_slogan: str
+    business_domain: str
+    business_colors: list[str]
+    business_budget: float
+
+
+class TranscriptionResponse(BaseModel):
+    generated_business_idea: GeneratedBusinessIdea
+
+
+@app.post("/transcribe")
+async def transcribe_audio(audioFile: UploadFile):
+    try:
+        # Save the uploaded file to a temporary location
+        temp_file_path = f"{audioFile.filename}"
+        with open(temp_file_path, "wb") as file:
+            file.write(await audioFile.read())
+
+        audio_file = open(temp_file_path, "rb")
+
+        # Open the audio file and transcribe it
+
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file
+        )
+        business_details = fetch_business_details(transcription.text)
+        business_idea = generate_business_idea(
+            business_detail=business_details)
+        print(business_idea, 'business_idea')
+        final_audio = TTS(business_idea["message"])
+
+        # Return the transcription text
+        # return TranscriptionResponse(generated_business_idea=business_idea)
+        return FileResponse(final_audio)
+
+    except Exception as e:
+        print(e)
+        return {"error": e}
+
+
+def fetch_business_details(text: str):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": "You return the business budget, location and idea from the user's text in the form of json. The json object should contain these properties: idea, location, budget. The budget should be in number"},
+            {"role": "user", "content": text},
+
+        ],
+        seed=123,
+        temperature=0.5,
+        max_tokens=100
+    )
+    print(response.choices[0].message.content)
+    json_object = json.loads(response.choices[0].message.content)
+    return json_object
+
+
+def generate_business_idea(business_detail: dict[str, str]):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": "You are a business generation bot. Give a message to the user of how he should create the business according to his idea in the form of json object.There should be onle message property which should summarize the business. Don't add other properties "},
+            {"role": "user", "content": f'''
+        My business idea is {business_detail['idea']}, and my budget is {business_detail['budget']}. I want to start my business in {business_detail['location']}
+    '''}
+
+        ]
+    )
+    print(response.choices[0].message.content)
+    json_object = json.loads(response.choices[0].message.content)
+    return json_object
+
+
+def text_to_audio(message: str):
+
+    return TTS(message)
+
+
+def TTS(text: str = "Today is a wonderful day to build something people love!"):
+
+    speech_file_path = Path(__file__).parent / "speech.mp3"
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="onyx",
+        input=text
+    )
+
+    response.stream_to_file(speech_file_path)
+    return speech_file_path
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, port=8000)
