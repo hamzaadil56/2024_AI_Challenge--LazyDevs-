@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 from pathlib import Path
 from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 
 
 load_dotenv()
@@ -438,11 +439,11 @@ async def transcribe_audio(audioFile: UploadFile):
 
         # Return the transcription text
         # return TranscriptionResponse(generated_business_idea=business_idea)
-        return FileResponse(final_audio)
+        return FileResponse(final_audio, filename="output_audio.mp3")
 
     except Exception as e:
         print(e)
-        return {"error": e}
+        return {"error": str(e)}
 
 
 def fetch_business_details(text: str):
